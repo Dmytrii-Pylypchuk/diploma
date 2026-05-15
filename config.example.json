@@ -1,0 +1,43 @@
+{
+  "backend": "google",
+  "db": {
+    "database": "TritonDatabase_dev",
+    "driver": "ODBC Driver 17 for SQL Server",
+    "encrypt": true,
+    "password": "<DB_PASSWORD>",
+    "server": "<DB_SERVER_IP>",
+    "trust_cert": true,
+    "user": "<DB_USER>"
+  },
+  "dry_run": true,
+  "google": {
+    "admin_email": "<ADMIN_EMAIL>",
+    "batch_size": 100,
+    "service_account_file": "../backend/service_account.json"
+  },
+  "groups": [
+    {
+      "group_email": "students-group@yourdomain.com",
+      "rule": {
+        "speciality_id": 3651,
+        "year": "2025",
+        "course_id": 4
+      }
+    }
+  ],
+  "ldap": {
+    "base_dn": "",
+    "fallback_filter": "(&(objectCategory=user)(objectClass=user)(sAMAccountName={login}))",
+    "mail_attr": "msExchExtensionAttribute45",
+    "password": "<LDAP_PASSWORD>",
+    "port": 389,
+    "primary_filter": "(&(objectCategory=user)(objectClass=user)(userPrincipalName={login}))",
+    "server": "<LDAP_SERVER_IP>",
+    "user": "<DOMAIN>\\<LDAP_USER>"
+  },
+  "logging": {
+    "file": "logs/sync.log",
+    "level": "INFO"
+  },
+  "logins_json": "../logins.json"
+}

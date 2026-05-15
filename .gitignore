@@ -1,0 +1,29 @@
+# Credentials — never commit
+config.json
+service_account.json
+*.json.key
+wluaivf4..json
+
+# Backup files
+*.bak
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Logs
+logs/*.log
+logs/*.log.*
+
+# IDE
+.idea/
+.vscode/
+*.swp

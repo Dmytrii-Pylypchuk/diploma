@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Triton Sync — Panel</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ─── HEADER ────────────────────────────────────────────── -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo">
+        <span class="logo-icon">⚡</span>
+        <span class="logo-text">Triton <b>Sync</b></span>
+      </div>
+      <span class="subtitle">Triton DB → LDAP → Google Groups</span>
+    </div>
+    <div class="header-right">
+      <span id="statusBadge" class="badge badge-idle">Завантаження...</span>
+    </div>
+  </header>
+
+  <!-- ─── TOAST CONTAINER ───────────────────────────────────── -->
+  <div id="toastContainer" aria-live="polite"></div>
+
+  <!-- ─── MODAL: РЕДАГУВАННЯ ГРУПИ ─────────────────────────── -->
+  <div id="groupModal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modalTitle" class="modal-title">Додати групу</h3>
+        <button class="modal-close" onclick="closeGroupModal()" title="Закрити">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <label class="field-label" for="fGroupEmail">
+            Email Google-групи <span class="required">*</span>
+          </label>
+          <input id="fGroupEmail" type="email" class="text-input"
+                 placeholder="group@domain.com" autocomplete="off" />
+        </div>
+        <div class="form-row-split">
+          <div class="form-col">
+            <label class="field-label" for="fYear">
+              Рік набору <span class="required">*</span>
+            </label>
+            <input id="fYear" type="text" class="text-input"
+                   placeholder="2022" maxlength="4" />
+          </div>
+          <div class="form-col">
+            <label class="field-label" for="fSpeciality">
+              ID спеціальності <span class="required">*</span>
+            </label>
+            <input id="fSpeciality" type="number" class="text-input"
+                   placeholder="3651" min="1" />
+          </div>
+        </div>
+        <div class="form-row-split">
+          <div class="form-col">
+            <label class="field-label" for="fCourseId">
+              Курс <span class="hint-inline">(необов'язково)</span>
+            </label>
+            <input id="fCourseId" type="number" class="text-input"
+                   placeholder="1 – 6" min="1" max="6" />
+          </div>
+          <div class="form-col">
+            <label class="field-label" for="fGroupName">
+              Назва групи <span class="hint-inline">(необов'язково)</span>
+            </label>
+            <input id="fGroupName" type="text" class="text-input"
+                   placeholder="ФІ-22" />
+          </div>
+        </div>
+        <div class="form-row-split">
+          <div class="form-col">
+            <label class="field-label" for="fFacultyId">
+              ID факультету <span class="hint-inline">(необов'язково)</span>
+            </label>
+            <input id="fFacultyId" type="number" class="text-input"
+                   placeholder="ID факультету" min="1" />
+          </div>
+          <div class="form-col">
+            <label class="field-label" for="fEducationFormId">
+              ID форми навчання <span class="hint-inline">(необов'язково)</span>
+            </label>
+            <input id="fEducationFormId" type="number" class="text-input"
+                   placeholder="ID форми навч." min="1" />
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="field-label" for="fLevelOfEducationId">
+            ID рівня освіти <span class="hint-inline">(необов'язково)</span>
+          </label>
+          <input id="fLevelOfEducationId" type="number" class="text-input"
+                 placeholder="ID рівня освіти" min="1" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeGroupModal()">Скасувати</button>
+        <button class="btn btn-primary" onclick="saveGroupModal()">
+          <span class="btn-icon">✓</span> Зберегти
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MAIN ─────────────────────────────────────────────── -->
+  <main class="app-main">
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- ПАНЕЛЬ 1: ГРУПИ СИНХРОНІЗАЦІЇ                         -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <section class="panel" id="panelSettings">
+      <div class="panel-header">
+        <h2 class="panel-title">
+          <span class="panel-icon">⚙️</span> Групи синхронізації
+        </h2>
+        <div class="panel-actions">
+          <span id="groupsSaved" class="hint"></span>
+          <button class="btn btn-primary" onclick="openGroupModal()">
+            <span class="btn-icon">＋</span> Додати групу
+          </button>
+        </div>
+      </div>
+      <div class="panel-body panel-body-table">
+        <table id="groupsTable" class="groups-table">
+          <thead>
+            <tr>
+              <th>Email групи</th>
+              <th>Рік</th>
+              <th>Спеціальність</th>
+              <th>Курс</th>
+              <th>Назва групи</th>
+              <th>Факультет</th>
+              <th>Форма навч.</th>
+              <th>Рівень освіти</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="groupsTableBody">
+            <tr id="groupsEmpty">
+              <td colspan="9" class="empty-row">Групи не додані</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- ПАНЕЛЬ 2: PREVIEW & SYNC                              -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <section class="panel" id="panelSync">
+      <div class="panel-header">
+        <h2 class="panel-title">
+          <span class="panel-icon">🔄</span> Preview &amp; Sync
+        </h2>
+        <div class="panel-actions">
+          <!-- Dry-run toggle -->
+          <label class="toggle-label" title="Якщо увімкнено — зміни не застосовуються">
+            <input type="checkbox" id="dryRunCheck" checked onchange="onDryRunChange()" />
+            <span class="toggle-track">
+              <span class="toggle-thumb"></span>
+            </span>
+            <span class="toggle-text">Dry run</span>
+          </label>
+        </div>
+      </div>
+      <div class="panel-body">
+
+        <!-- Group selector -->
+        <div class="input-row">
+          <div class="input-group">
+            <label class="field-label" for="groupEmailSelect">Група</label>
+            <select id="groupEmailSelect" class="text-input select-input">
+              <option value="">— оберіть групу —</option>
+            </select>
+          </div>
+          <div class="btn-group-sync">
+            <button
+              id="btnPreview"
+              class="btn btn-secondary"
+              onclick="runPreview()"
+              title="Обчислити різницю без змін"
+            >
+              <span class="btn-icon">👁</span> Preview diff
+            </button>
+            <button
+              id="btnSync"
+              class="btn btn-danger"
+              onclick="runSync()"
+              title="Застосувати зміни (лише якщо Dry run вимкнено)"
+              disabled
+            >
+              <span class="btn-icon">▶</span> Run sync
+            </button>
+          </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div id="progressBar" class="progress-bar hidden">
+          <div class="progress-fill"></div>
+        </div>
+
+        <!-- Diff results — 4 колонки -->
+        <div class="diff-grid">
+          <div class="diff-col diff-add">
+            <div class="diff-col-header">
+              <span class="diff-icon">＋</span>
+              <span class="diff-title">To add</span>
+              <span id="countAdd" class="diff-count">0</span>
+            </div>
+            <div id="listAdd" class="diff-list"></div>
+          </div>
+          <div class="diff-col diff-remove">
+            <div class="diff-col-header">
+              <span class="diff-icon">－</span>
+              <span class="diff-title">To remove</span>
+              <span id="countRemove" class="diff-count">0</span>
+            </div>
+            <div id="listRemove" class="diff-list"></div>
+          </div>
+          <div class="diff-col diff-unchanged">
+            <div class="diff-col-header">
+              <span class="diff-icon">＝</span>
+              <span class="diff-title">Unchanged</span>
+              <span id="countUnchanged" class="diff-count">0</span>
+            </div>
+            <div id="listUnchanged" class="diff-list"></div>
+          </div>
+          <div class="diff-col diff-invalid">
+            <div class="diff-col-header">
+              <span class="diff-icon">⚠</span>
+              <span class="diff-title">Invalid</span>
+              <span id="countInvalid" class="diff-count">0</span>
+            </div>
+            <div id="listInvalid" class="diff-list"></div>
+          </div>
+        </div>
+
+        <!-- Stats bar -->
+        <div id="statsBar" class="stats-bar hidden">
+          <span id="statsText" class="stats-text"></span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════ -->
+    <!-- ПАНЕЛЬ 3: ЛОГИ                                        -->
+    <!-- ══════════════════════════════════════════════════════ -->
+    <section class="panel" id="panelLogs">
+      <div class="panel-header">
+        <h2 class="panel-title">
+          <span class="panel-icon">📋</span> Журнал подій
+        </h2>
+        <div class="panel-actions">
+          <button id="btnPoll" class="btn btn-secondary btn-sm" onclick="togglePolling()">
+            <span class="btn-icon" id="pollIcon">▶</span>
+            <span id="pollLabel">Авто-оновлення</span>
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="loadLogs()">
+            Оновити
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="clearLogView()">
+            Очистити вигляд
+          </button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="log-meta">
+          <span id="logMeta" class="hint">—</span>
+        </div>
+        <pre id="logOutput" class="log-terminal"></pre>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="app-footer">
+    <span>Triton Sync Panel</span>
+    <span id="footerBackend" class="hint">backend: —</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+# === Web API сервер ===
+Flask>=3.0
+flask-cors>=4.0
+
+# === Google Workspace Directory API ===
+google-api-python-client>=2.120.0
+google-auth>=2.29.0
+google-auth-httplib2>=0.2.0
+
+# === MS SQL Server (Triton DB) ===
+pyodbc>=5.1.0
+
+# === LDAP ===
+ldap3>=2.9.1
